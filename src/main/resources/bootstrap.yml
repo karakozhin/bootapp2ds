@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: bootapp2ds
+  #  cloud:
+  #      app.config:
+  #        uri: http://172.16.0.182:8080
+  #        fail-fast: true
+  #        password: ${config_server_password:password}
+  #        username: ${config_server_user:user}
+
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: configserver
+eureka:
+  client:
+    service-url:
+      defaultZone: ${eureka_service_uri}
