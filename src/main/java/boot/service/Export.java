@@ -1,8 +1,11 @@
 package boot.service;
 
 import boot.mongo.dto.ReportDTO;
+import boot.mongo.model.MdicPeriodKindList;
 import boot.mongo.model.StatBin;
 import com.sun.org.apache.xpath.internal.operations.Bool;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -30,19 +33,25 @@ public class Export {
         sheet.addMergedRegion(CellRangeAddress.valueOf("A1:A3"));
         sheet.addMergedRegion(CellRangeAddress.valueOf("B1:B3"));
         sheet.addMergedRegion(CellRangeAddress.valueOf("C1:C3"));
+        sheet.addMergedRegion(CellRangeAddress.valueOf("G1:G3"));
+//        sheet.addMergedRegion(CellRangeAddress.valueOf("H1:H3"));
+
         sheet.addMergedRegion(new CellRangeAddress(0, 0, 3, 5));
         sheet.addMergedRegion(new CellRangeAddress(1, 2, 3, 3));
         sheet.addMergedRegion(new CellRangeAddress(1, 1, 4, 5));
 
         Row row = sheet.createRow(i);
         sheet.setColumnWidth(0, 2000);
-        sheet.setColumnWidth(1, 5000);
+        sheet.setColumnWidth(1, 10000);
         sheet.setColumnWidth(2, 5000);
+        sheet.setColumnWidth(6, 5000);
 
         row.createCell(0).setCellValue("№");
         row.createCell(1).setCellValue("Наименование формы");
         row.createCell(2).setCellValue("Количество по каталогу");
         row.createCell(3).setCellValue("Количество отчитавшихся");
+        row.createCell(6).setCellValue("Период");
+//        row.createCell(7).setCellValue("Форм Айди");
 
         i++;
         Row row1 = sheet.createRow(i);
@@ -54,15 +63,14 @@ public class Export {
         row2.createCell(4).setCellValue("Переотчет");
         row2.createCell(5).setCellValue("Дозапись");
 
-        List<StatBin> formsAndPeriod = new ArrayList<>();
-
-        StatBin bin = new StatBin();
-
 
         List<ReportDTO> reports = appService.getReports(periodKindListId, teCode, statusCode);
 
         for (ReportDTO dto: reports){
+            int num = dto.getNum();
             Long formId = dto.getFormId();
+            String formName = dto.getFormName();
+            String periodName = dto.getPeriodKindlistName();
             Long periodKindList = dto.getPeriodKindListId();
             Long cntCatalog = dto.getCntCatalog();
             Long otchitavwisya = dto.getOtchitavwisya();
@@ -72,9 +80,18 @@ public class Export {
             i ++;
 
             Row rowData = sheet.createRow(i);
-            rowData.createCell(2).setCellValue(formId);
-            rowData.createCell(6).setCellValue(periodKindList);
-            rowData.createCell(1).setCellValue(cntCatalog);
+
+            rowData.createCell(0).setCellValue(num);
+            rowData.createCell(1).setCellValue(formName);
+            rowData.createCell(2).setCellValue(cntCatalog);
+            rowData.createCell(3).setCellValue(otchitavwisya);
+            rowData.createCell(4).setCellValue(pereotchet);
+            rowData.createCell(5).setCellValue(dozapis);
+            rowData.createCell(6).setCellValue(periodName);
+//            rowData.createCell(7).setCellValue(periodKindList);
+//            rowData.createCell(8).setCellValue(formId);
+
+
 
         }
 

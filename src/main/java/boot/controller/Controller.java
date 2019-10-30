@@ -1,6 +1,7 @@
 package boot.controller;
 
 import boot.mongo.dto.ReportDTO;
+import boot.mongo.model.MdicPeriodKindList;
 import boot.mongo.model.StatBin;
 import boot.service.AppService;
 import boot.service.Export;
@@ -83,9 +84,19 @@ public class Controller {
     }
 
     @GetMapping("/excel")
-    public Workbook getExcel(@RequestParam("periodKIndListId") List<Long> periodKindLIstId,
-                             @RequestParam){
-        return export.getExcel();
+    public Workbook getExcel(@RequestParam("periodKindListId") List<Long> periodKindListId,
+                             @RequestParam("teCode") String teCode,
+                             @RequestParam("statusCode") List<String> statusCode){
+        return export.getExcel(periodKindListId, teCode, statusCode);
     }
 
+    @GetMapping("/name")
+    public String getName(@RequestParam("formId") Long formId) {
+        return appService.getTitleForDetailStatBinWin(formId);
+    }
+
+    @GetMapping("/periodKindlistName")
+    public List<String> getperiodKindlistName(@RequestParam("periodKindListId") Long periodKindListId) {
+        return appService.getperiodKindlistName(periodKindListId);
+    }
 }
