@@ -6,14 +6,15 @@ import boot.mongo.meta.MetaServiceResponse;
 import boot.mongo.model.MdicFormVersion;
 import boot.mongo.model.MdicPeriodKindList;
 import boot.mongo.model.StatBin;
+import boot.mongo.repository.StatBinReactiveRepository;
 import boot.mongo.repository.StatBinRepository;
-import com.mongodb.client.model.Sorts;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 
 import java.util.ArrayList;
@@ -29,6 +30,9 @@ public class AppService {
 
     @Autowired
     private StatBinRepository statBinRepository;
+
+    @Autowired
+    private StatBinReactiveRepository statBinReactiveRepository;
 
     @Autowired
     private MetaServiceClient metaServiceClient;
@@ -52,6 +56,14 @@ public class AppService {
     //dozapis
     public List<StatBin> dozapis(Long periodKindListId, Long formId, Boolean active, Boolean inCatalog, String teCode, List<String> statusCode, Boolean doZapis) {
         return statBinRepository.findByPeriodKindListIdAndFormIdAndActiveAndInCatalogAndTeCodeStartsWithAndStatusCodeIsInAndDoZapis(periodKindListId, formId, active, inCatalog, teCode, statusCode, doZapis);
+    }
+
+    public List<StatBin> findBySourceCode(Long periodKindListId, Boolean inCatalog, String sourceCode, String teCode, List<String> statusCode){
+        return statBinRepository.findByPeriodKindListIdAndInCatalogAndSourceCodeAndTeCodeStartsWithAndStatusCodeIsIn(periodKindListId, inCatalog, sourceCode, teCode, statusCode);
+    }
+
+    public Mono<Long> getCountStatBinBySourceCode(Long periodKindListId, Boolean inCatalog, String sourceCode, String teCode, List<String> statusCode){
+        return statBinReactiveRepository.countAllByPeriodKindListIdAndInCatalogAndSourceCodeAndTeCodeStartsWithAndStatusCodeIsIn(periodKindListId, inCatalog, sourceCode, teCode, statusCode);
     }
 
     //forms
@@ -126,6 +138,8 @@ public class AppService {
 
         return periodName;
     }
+
+
 
 
 

@@ -1,7 +1,6 @@
 package boot.controller;
 
 import boot.mongo.dto.ReportDTO;
-import boot.mongo.model.MdicPeriodKindList;
 import boot.mongo.model.StatBin;
 import boot.service.AppService;
 import boot.service.Export;
@@ -11,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -98,5 +98,28 @@ public class Controller {
     @GetMapping("/periodKindlistName")
     public List<String> getperiodKindlistName(@RequestParam("periodKindListId") Long periodKindListId) {
         return appService.getperiodKindlistName(periodKindListId);
+    }
+
+    @GetMapping("/excelRegion")
+    public Workbook getExcelRegion(){
+        return export.getExcelRegion();
+    }
+
+    @GetMapping("/findBySourceCode")
+    public List<StatBin> findStatBinBySourceCode(@RequestParam("periodKindListId") Long periodKindListId,
+                                            @RequestParam("inCatalog") Boolean inCatalog,
+                                            @RequestParam("sourceCode") String sourceCode,
+                                            @RequestParam("teCode") String teCode,
+                                            @RequestParam("statusCode") List<String> statusCode){
+        return appService.findBySourceCode(periodKindListId, inCatalog, sourceCode, teCode, statusCode);
+    }
+
+    @GetMapping("/countBySourceCode")
+    public Mono<Long> getCountStatBinBySourceCode(@RequestParam("periodKindListId") Long periodKindListId,
+                                                  @RequestParam("inCatalog") Boolean inCatalog,
+                                                  @RequestParam("sourceCode") String sourceCode,
+                                                  @RequestParam("teCode") String teCode,
+                                                  @RequestParam("statusCode") List<String> statusCode){
+        return appService.getCountStatBinBySourceCode(periodKindListId, inCatalog, sourceCode, teCode, statusCode);
     }
 }

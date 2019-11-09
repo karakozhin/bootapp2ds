@@ -1,9 +1,8 @@
 package boot.service;
 
 import boot.mongo.dto.ReportDTO;
-import boot.mongo.model.MdicPeriodKindList;
-import boot.mongo.model.StatBin;
-import com.sun.org.apache.xpath.internal.operations.Bool;
+import boot.mongo.klazz.KlazzService;
+import boot.mongo.klazz.Region;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
@@ -22,9 +21,13 @@ import java.util.*;
 @Service
 public class Export {
     private static final String FILE_NAME = "/home/karakozhin/excel.xlsx";
+    private static final String Excel_ECP = "/home/karakozhin/excel_ecp.xlsx";
 
     @Autowired
     private AppService appService;
+
+    @Autowired
+    private KlazzService klazzService;
 
     public Workbook getExcel(List<Long> periodKindListId, String teCode, List<String> statusCode){
         int i = 0;
@@ -110,5 +113,62 @@ public class Export {
         return workbook;
     }
 
+    public Workbook getExcelRegion(){
+        int i = 0;
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        XSSFSheet sheet = workbook.createSheet("Лист1");
+
+        Row row = sheet.createRow(i);
+        row.setHeightInPoints(4*sheet.getDefaultRowHeightInPoints());
+        sheet.setColumnWidth(0, 8000);
+        sheet.setColumnWidth(1, 5000);
+        sheet.setColumnWidth(2, 5000);
+        sheet.setColumnWidth(3, 5000);
+
+        Font hFont = workbook.createFont();
+        hFont.setFontName("Arial");
+        hFont.setFontHeightInPoints((short)8);
+        hFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
+
+        CellStyle hStyle = workbook.createCellStyle();
+        hStyle.setFont(hFont);
+        hStyle.setAlignment(CellStyle.ALIGN_CENTER);
+        hStyle.setVerticalAlignment(CellStyle.VERTICAL_CENTER);
+        hStyle.setBorderBottom(CellStyle.BORDER_THIN);
+        hStyle.setBorderLeft(CellStyle.BORDER_THIN);
+        hStyle.setBorderRight(CellStyle.BORDER_THIN);
+        hStyle.setBorderTop(CellStyle.BORDER_THIN);
+
+        row.createCell(0).setCellValue("Регионы");
+        row.getCell(0).setCellStyle(hStyle);
+        row.createCell(1).setCellValue("Количество \nреспондентов по \nкаталогу согласно \nКРП");
+        row.getCell(1).setCellStyle(hStyle);
+        row.createCell(2).setCellValue("Количество  \nреспондентов, \nпредставившие стат. \nформы в онлайн режиме");
+        row.getCell(2).setCellStyle(hStyle);
+        row.createCell(3).setCellValue("Доля респондентов, \nпредставивших  стат. \nформы в онлайн режиме \n(в %)");
+        row.getCell(3).setCellStyle(hStyle);
+        
+        List<Region> regionList = klazzService.getRegionList();
+        
+        for (Region region : regionList){
+            String name = region.getName();
+            i++;
+            Row rowData = sheet.createRow(i);
+            rowData.createCell(0).setCellValue(name);
+        }
+
+        try {
+            FileOutputStream outputStream = new FileOutputStream(Excel_ECP);
+            workbook.write(outputStream);
+            workbook.close();
+        } catch (
+                FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return  workbook;
+    }
 
 }

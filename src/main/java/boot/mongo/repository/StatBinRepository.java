@@ -2,8 +2,8 @@ package boot.mongo.repository;
 
 import boot.mongo.model.StatBin;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -42,4 +42,6 @@ public interface StatBinRepository extends MongoRepository<StatBin, String> {
                                                                                                                      List<String> statusCode,
                                                                                                                      Boolean doZapis);
 
+    List<StatBin> findByPeriodKindListIdAndInCatalogAndSourceCodeAndTeCodeStartsWithAndStatusCodeIsIn
+            (Long periodKindListId, Boolean inCatalog, String sourceCode, String teCode, List<String> statusCode);
 }
