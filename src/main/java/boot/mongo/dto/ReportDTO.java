@@ -1,9 +1,5 @@
 package boot.mongo.dto;
 
-import boot.mongo.model.MdicPeriodKindList;
-
-import java.util.List;
-
 public class ReportDTO {
 
     private int num;

@@ -1,5 +1,6 @@
 package boot.service;
 
+import boot.mongo.dto.EcpDTO;
 import boot.mongo.dto.ReportDTO;
 import boot.mongo.klazz.KlazzService;
 import boot.mongo.klazz.Region;
@@ -113,7 +114,7 @@ public class Export {
         return workbook;
     }
 
-    public Workbook getExcelRegion(){
+    public Workbook getExcelRegion(Long periodKindListId){
         int i = 0;
         XSSFWorkbook workbook = new XSSFWorkbook();
         XSSFSheet sheet = workbook.createSheet("Лист1");
@@ -148,13 +149,19 @@ public class Export {
         row.createCell(3).setCellValue("Доля респондентов, \nпредставивших  стат. \nформы в онлайн режиме \n(в %)");
         row.getCell(3).setCellStyle(hStyle);
         
-        List<Region> regionList = klazzService.getRegionList();
+        List<EcpDTO> ecpDTOList = appService.getOur(periodKindListId);
         
-        for (Region region : regionList){
-            String name = region.getName();
+        for (EcpDTO ecpDTO : ecpDTOList){
+            String name = ecpDTO.getOblName();
+            Long cntCatalog = ecpDTO.getCntCatalog();
+            Long ecp = ecpDTO.getKolECP();
+            String procent = ecpDTO.getProcent();
             i++;
             Row rowData = sheet.createRow(i);
             rowData.createCell(0).setCellValue(name);
+            rowData.createCell(1).setCellValue(cntCatalog);
+            rowData.createCell(2).setCellValue(ecp);
+            rowData.createCell(3).setCellValue(procent);
         }
 
         try {

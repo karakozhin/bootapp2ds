@@ -10,12 +10,18 @@ import java.util.List;
 @Repository
 public interface StatBinRepository extends MongoRepository<StatBin, String> {
 
-    //kolichestva catalog
+    //kolichestva catalog po forme
     List<StatBin> findByPeriodKindListIdAndFormIdAndActiveAndInCatalogAndTeCodeStartsWith(Long periodKindListId,
                                                                                           Long formId,
                                                                                           Boolean active,
                                                                                           Boolean inCatalog,
                                                                                           String teCode);
+
+    //kolichestva catalog
+    List<StatBin> findByPeriodKindListIdAndActiveAndInCatalogAndTeCodeStartsWith(Long periodKindListId,
+                                                                                 Boolean active,
+                                                                                 Boolean inCatalog,
+                                                                                 String teCode);
 
     //otchitavwiesia
     List<StatBin> findByPeriodKindListIdAndFormIdAndActiveAndInCatalogAndTeCodeStartsWithAndStatusCodeIsIn(Long periodKindListId,
@@ -42,6 +48,7 @@ public interface StatBinRepository extends MongoRepository<StatBin, String> {
                                                                                                                      List<String> statusCode,
                                                                                                                      Boolean doZapis);
 
-    List<StatBin> findByPeriodKindListIdAndInCatalogAndSourceCodeAndTeCodeStartsWithAndStatusCodeIsIn
-            (Long periodKindListId, Boolean inCatalog, String sourceCode, String teCode, List<String> statusCode);
+    //sdavwie po ECP
+    List<StatBin> findByPeriodKindListIdAndInCatalogAndActiveAndSourceCodeAndTeCodeStartsWithAndStatusCodeIsIn
+            (Long periodKindListId, Boolean inCatalog, Boolean active, String sourceCode, String teCode, List<String> statusCode);
 }

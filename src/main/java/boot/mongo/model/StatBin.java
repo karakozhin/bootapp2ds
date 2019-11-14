@@ -3,7 +3,6 @@ package boot.mongo.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.persistence.Entity;
 import java.util.Date;
 import java.util.List;
 
@@ -131,8 +130,9 @@ public class StatBin {
         return teCode;
     }
 
-    public void setTeCode(String teCode) {
+    public String setTeCode(String teCode) {
         this.teCode = teCode;
+        return teCode;
     }
 
     public boolean isHasError() {

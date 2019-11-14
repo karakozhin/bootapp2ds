@@ -1,6 +1,8 @@
 package boot.service;
 
+import boot.mongo.dto.EcpDTO;
 import boot.mongo.dto.ReportDTO;
+import boot.mongo.klazz.*;
 import boot.mongo.meta.MetaServiceClient;
 import boot.mongo.meta.MetaServiceResponse;
 import boot.mongo.model.MdicFormVersion;
@@ -18,6 +20,8 @@ import reactor.core.publisher.Mono;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
@@ -37,10 +41,15 @@ public class AppService {
     @Autowired
     private MetaServiceClient metaServiceClient;
 
-    //kolichestva catalog
-    public List<StatBin> inCatalog(Long periodKindListId, Long formId, Boolean active, Boolean inCatalog, String teCode) {
-        return statBinRepository.findByPeriodKindListIdAndFormIdAndActiveAndInCatalogAndTeCodeStartsWith(periodKindListId, formId, active, inCatalog, teCode);
+    @Autowired
+    private KlazzService klazzService;
 
+    @Autowired
+    private KlazzServiceClient klazzServiceClient;
+
+    //kolichestva catalog po forme
+    public List<StatBin> inCatalogByForm(Long periodKindListId, Long formId, Boolean active, Boolean inCatalog, String teCode) {
+        return statBinRepository.findByPeriodKindListIdAndFormIdAndActiveAndInCatalogAndTeCodeStartsWith(periodKindListId, formId, active, inCatalog, teCode);
     }
 
     //otchitavwiesia
@@ -58,12 +67,19 @@ public class AppService {
         return statBinRepository.findByPeriodKindListIdAndFormIdAndActiveAndInCatalogAndTeCodeStartsWithAndStatusCodeIsInAndDoZapis(periodKindListId, formId, active, inCatalog, teCode, statusCode, doZapis);
     }
 
-    public List<StatBin> findBySourceCode(Long periodKindListId, Boolean inCatalog, String sourceCode, String teCode, List<String> statusCode){
-        return statBinRepository.findByPeriodKindListIdAndInCatalogAndSourceCodeAndTeCodeStartsWithAndStatusCodeIsIn(periodKindListId, inCatalog, sourceCode, teCode, statusCode);
+    //sdavwie po ECP
+    public List<StatBin> findBySourceCode(Long periodKindListId, Boolean inCatalog, Boolean active, String sourceCode, String teCode, List<String> statusCode){
+        return statBinRepository.findByPeriodKindListIdAndInCatalogAndActiveAndSourceCodeAndTeCodeStartsWithAndStatusCodeIsIn(periodKindListId, inCatalog, active, sourceCode, teCode, statusCode);
     }
 
+    //kolichestvo sdavwih po ECP
     public Mono<Long> getCountStatBinBySourceCode(Long periodKindListId, Boolean inCatalog, String sourceCode, String teCode, List<String> statusCode){
         return statBinReactiveRepository.countAllByPeriodKindListIdAndInCatalogAndSourceCodeAndTeCodeStartsWithAndStatusCodeIsIn(periodKindListId, inCatalog, sourceCode, teCode, statusCode);
+    }
+
+    //kolichestva catalog
+    public List<StatBin> getCountInCatalog(Long periodKindListId, Boolean active, Boolean inCatalog, String teCode){
+        return statBinRepository.findByPeriodKindListIdAndActiveAndInCatalogAndTeCodeStartsWith(periodKindListId, active, inCatalog, teCode);
     }
 
     //forms
@@ -81,6 +97,35 @@ public class AppService {
         return report;
     }
 
+    //вытаскивает отчеты которые сдали по ЕЦП по областям согласно КРП(Классификатор размерности предприятий) и в процентах
+    public List<EcpDTO> getOur(Long periodKindListId){
+        List<String> status = new ArrayList<>();
+        status.add("REPORTED");
+        status.add("RECOUNTED");
+        List<EcpDTO> ecpDTOList = new ArrayList<>();
+
+        List<Region> regionList = klazzService.getRegionList();
+        String proc = "%";
+        for (Region region  : regionList){
+            EcpDTO ecpDTO = new EcpDTO();
+
+            //teCode вытащил
+            String code = region.getTeCode();
+            //передал teCode
+            long passEcp = findBySourceCode(periodKindListId, true, true, "RESPONDENT", code, status).size();
+            long cntCatalog = getCountInCatalog(periodKindListId, true, true, code).size();
+            long procent = (passEcp * 100)/cntCatalog;
+
+            ecpDTO.setOblName(region.getName());
+            ecpDTO.setKolECP(passEcp);
+            ecpDTO.setCntCatalog(cntCatalog);
+            ecpDTO.setProcent(procent + proc);
+            ecpDTOList.add(ecpDTO);
+        }
+        return ecpDTOList;
+    }
+
+    //по областям,периоду вытаскивает отчеты otchitavwiesia, kolichestva catalog, pereotchet, dozapis
     public List<ReportDTO> getReports(List<Long> periodKindListId, String teCode, List<String> statusCode) {
         List<ReportDTO> reports = new ArrayList<>();
 
@@ -88,7 +133,7 @@ public class AppService {
 
         for (StatBin statBin : statBinList) {
             ReportDTO reportDTO = new ReportDTO();
-            long cntCatalog = inCatalog(statBin.getPeriodKindListId().get(0), statBin.getFormId(), true, true, teCode).size();
+            long cntCatalog = inCatalogByForm(statBin.getPeriodKindListId().get(0), statBin.getFormId(), true, true, teCode).size();
             long cntOtchitavwiesia = otchitavwiesia(statBin.getPeriodKindListId().get(0), statBin.getFormId(), true, true, teCode, statusCode).size();
             long cntPereotchet = pereotchet(statBin.getPeriodKindListId().get(0), statBin.getFormId(), true, true, teCode, statusCode).size();
             long cntDozapis = dozapis(statBin.getPeriodKindListId().get(0), statBin.getFormId(), true, true, teCode, statusCode, true).size();
@@ -96,7 +141,9 @@ public class AppService {
             MdicPeriodKindList mdicPeriodKindList = period.get(0);
             String title = getTitleForDetailStatBinWin(statBin.getFormId());
 
+            //нумерация
             reportDTO.setNum(statBinList.indexOf(statBin) + 1);
+
             reportDTO.setFormId(statBin.getFormId());
             reportDTO.setFormName(title);
             reportDTO.setPeriodKindlistName(mdicPeriodKindList.getPeriodKindlistName());

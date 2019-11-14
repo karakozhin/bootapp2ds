@@ -1,6 +1,9 @@
 package boot.controller;
 
+import boot.mongo.dto.EcpDTO;
 import boot.mongo.dto.ReportDTO;
+import boot.mongo.klazz.KlazzService;
+import boot.mongo.klazz.Region;
 import boot.mongo.model.StatBin;
 import boot.service.AppService;
 import boot.service.Export;
@@ -22,6 +25,9 @@ public class Controller {
     private AppService appService;
 
     @Autowired
+    private KlazzService klazzService;
+
+    @Autowired
     private Export export;
 
     //kolichestva catalog
@@ -31,7 +37,7 @@ public class Controller {
                                    @RequestParam("active") Boolean active,
                                    @RequestParam("inCatalog") Boolean inCatalog,
                                    @RequestParam("teCode") String teCode) {
-        return appService.inCatalog(periodKindListId, formId, active, inCatalog, teCode);
+        return appService.inCatalogByForm(periodKindListId, formId, active, inCatalog, teCode);
     }
 
     //otchitavwiesia
@@ -101,17 +107,23 @@ public class Controller {
     }
 
     @GetMapping("/excelRegion")
-    public Workbook getExcelRegion(){
-        return export.getExcelRegion();
+    public Workbook getExcelRegion(@RequestParam("periodKindListId") Long periodKindListId){
+        return export.getExcelRegion(periodKindListId);
     }
 
     @GetMapping("/findBySourceCode")
     public List<StatBin> findStatBinBySourceCode(@RequestParam("periodKindListId") Long periodKindListId,
                                             @RequestParam("inCatalog") Boolean inCatalog,
+                                            @RequestParam("active") Boolean active,
                                             @RequestParam("sourceCode") String sourceCode,
                                             @RequestParam("teCode") String teCode,
                                             @RequestParam("statusCode") List<String> statusCode){
-        return appService.findBySourceCode(periodKindListId, inCatalog, sourceCode, teCode, statusCode);
+        return appService.findBySourceCode(periodKindListId, inCatalog, active, sourceCode, teCode, statusCode);
+    }
+
+    @GetMapping("/region")
+    public List<Region> getAllRegions() {
+        return klazzService.getRegionList();
     }
 
     @GetMapping("/countBySourceCode")
@@ -121,5 +133,10 @@ public class Controller {
                                                   @RequestParam("teCode") String teCode,
                                                   @RequestParam("statusCode") List<String> statusCode){
         return appService.getCountStatBinBySourceCode(periodKindListId, inCatalog, sourceCode, teCode, statusCode);
+    }
+
+    @GetMapping("/getOur")
+    public List<EcpDTO> getEcpList(@RequestParam("periodKindListId") Long periodKindListId){
+        return appService.getOur(periodKindListId);
     }
 }
