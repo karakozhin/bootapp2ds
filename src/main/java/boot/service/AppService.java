@@ -67,19 +67,26 @@ public class AppService {
         return statBinRepository.findByPeriodKindListIdAndFormIdAndActiveAndInCatalogAndTeCodeStartsWithAndStatusCodeIsInAndDoZapis(periodKindListId, formId, active, inCatalog, teCode, statusCode, doZapis);
     }
 
+
+
+
+
+
+
     //sdavwie po ECP
-    public List<StatBin> findBySourceCode(Long periodKindListId, Boolean inCatalog, Boolean active, String sourceCode, String teCode, List<String> statusCode){
-        return statBinRepository.findByPeriodKindListIdAndInCatalogAndActiveAndSourceCodeAndTeCodeStartsWithAndStatusCodeIsIn(periodKindListId, inCatalog, active, sourceCode, teCode, statusCode);
+    public Long findBySourceCode(Long periodKindListId, String sourceCode, String teCode, List<String> statusCode){
+         long g = statBinRepository.findByPeriodKindListIdAndInCatalogAndActiveAndSourceCodeAndTeCodeStartsWithAndStatusCodeIsIn(periodKindListId, true, true, sourceCode, teCode, statusCode).size();
+        return g;
     }
 
     //kolichestvo sdavwih po ECP
-    public Mono<Long> getCountStatBinBySourceCode(Long periodKindListId, Boolean inCatalog, String sourceCode, String teCode, List<String> statusCode){
-        return statBinReactiveRepository.countAllByPeriodKindListIdAndInCatalogAndSourceCodeAndTeCodeStartsWithAndStatusCodeIsIn(periodKindListId, inCatalog, sourceCode, teCode, statusCode);
-    }
+//    public Mono<Long> getCountStatBinBySourceCode(Long periodKindListId, Boolean inCatalog, String sourceCode, String teCode, List<String> statusCode){
+//        return statBinReactiveRepository.countAllByPeriodKindListIdAndInCatalogAndSourceCodeAndTeCodeStartsWithAndStatusCodeIsIn(periodKindListId, inCatalog, sourceCode, teCode, statusCode);
+//    }
 
     //kolichestva catalog
-    public List<StatBin> getCountInCatalog(Long periodKindListId, Boolean active, Boolean inCatalog, String teCode){
-        return statBinRepository.findByPeriodKindListIdAndActiveAndInCatalogAndTeCodeStartsWith(periodKindListId, active, inCatalog, teCode);
+    public List<StatBin> getCountInCatalog(Long periodKindListId, String teCode){
+        return statBinRepository.findByPeriodKindListIdAndActiveAndInCatalogAndTeCodeStartsWith(periodKindListId, true, true, teCode);
     }
 
     //forms
@@ -99,29 +106,44 @@ public class AppService {
 
     //вытаскивает отчеты которые сдали по ЕЦП по областям согласно КРП(Классификатор размерности предприятий) и в процентах
     public List<EcpDTO> getOur(Long periodKindListId){
+
         List<String> status = new ArrayList<>();
         status.add("REPORTED");
         status.add("RECOUNTED");
         List<EcpDTO> ecpDTOList = new ArrayList<>();
 
         List<Region> regionList = klazzService.getRegionList();
+        List<Krp> krpList = klazzService.getKrpList();
+
+//        String mal = krpList.get(0).getName();
+//        String sred = krpList.get(1).getName();
+//        String krup = krpList.get(2).getName();
+
         String proc = "%";
+
         for (Region region  : regionList){
+
             EcpDTO ecpDTO = new EcpDTO();
 
             //teCode вытащил
             String code = region.getTeCode();
+
             //передал teCode
-            long passEcp = findBySourceCode(periodKindListId, true, true, "RESPONDENT", code, status).size();
-            long cntCatalog = getCountInCatalog(periodKindListId, true, true, code).size();
+            long passEcp = findBySourceCode(periodKindListId, "RESPONDENT", code, status);
+
+            long cntCatalog = getCountInCatalog(periodKindListId, code).size();
             long procent = (passEcp * 100)/cntCatalog;
+
+
 
             ecpDTO.setOblName(region.getName());
             ecpDTO.setKolECP(passEcp);
             ecpDTO.setCntCatalog(cntCatalog);
             ecpDTO.setProcent(procent + proc);
             ecpDTOList.add(ecpDTO);
+
         }
+
         return ecpDTOList;
     }
 

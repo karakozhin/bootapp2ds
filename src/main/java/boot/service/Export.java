@@ -131,6 +131,11 @@ public class Export {
         hFont.setFontHeightInPoints((short)8);
         hFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
 
+        Font rFont = workbook.createFont();
+        rFont.setFontName("Arial");
+        rFont.setFontHeightInPoints((short)8);
+        rFont.setBoldweight(Font.BOLDWEIGHT_NORMAL);
+
         CellStyle hStyle = workbook.createCellStyle();
         hStyle.setFont(hFont);
         hStyle.setAlignment(CellStyle.ALIGN_CENTER);
@@ -139,6 +144,16 @@ public class Export {
         hStyle.setBorderLeft(CellStyle.BORDER_THIN);
         hStyle.setBorderRight(CellStyle.BORDER_THIN);
         hStyle.setBorderTop(CellStyle.BORDER_THIN);
+
+        CellStyle rStyle = workbook.createCellStyle();
+        rStyle.setFont(rFont);
+        rStyle.setWrapText(true);
+        rStyle.setAlignment(CellStyle.ALIGN_CENTER);
+        rStyle.setVerticalAlignment(CellStyle.VERTICAL_CENTER);
+        rStyle.setBorderBottom(CellStyle.BORDER_THIN);
+        rStyle.setBorderLeft(CellStyle.BORDER_THIN);
+        rStyle.setBorderRight(CellStyle.BORDER_THIN);
+        rStyle.setBorderTop(CellStyle.BORDER_THIN);
 
         row.createCell(0).setCellValue("Регионы");
         row.getCell(0).setCellStyle(hStyle);
@@ -150,17 +165,33 @@ public class Export {
         row.getCell(3).setCellStyle(hStyle);
         
         List<EcpDTO> ecpDTOList = appService.getOur(periodKindListId);
-        
+
+        row.getCell(0).setCellStyle(hStyle);
+        row.getCell(1).setCellStyle(hStyle);
+        row.getCell(2).setCellStyle(hStyle);
+        row.getCell(3).setCellStyle(hStyle);
+
+
         for (EcpDTO ecpDTO : ecpDTOList){
+
             String name = ecpDTO.getOblName();
             Long cntCatalog = ecpDTO.getCntCatalog();
             Long ecp = ecpDTO.getKolECP();
             String procent = ecpDTO.getProcent();
+
+
+
             i++;
             Row rowData = sheet.createRow(i);
+
             rowData.createCell(0).setCellValue(name);
+//            Row roww = sheet;
+
+
             rowData.createCell(1).setCellValue(cntCatalog);
+
             rowData.createCell(2).setCellValue(ecp);
+
             rowData.createCell(3).setCellValue(procent);
         }
 

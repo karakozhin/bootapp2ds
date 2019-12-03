@@ -3,6 +3,7 @@ package boot.controller;
 import boot.mongo.dto.EcpDTO;
 import boot.mongo.dto.ReportDTO;
 import boot.mongo.klazz.KlazzService;
+import boot.mongo.klazz.Krp;
 import boot.mongo.klazz.Region;
 import boot.mongo.model.StatBin;
 import boot.service.AppService;
@@ -111,14 +112,13 @@ public class Controller {
         return export.getExcelRegion(periodKindListId);
     }
 
+    //sdavwie po ECP
     @GetMapping("/findBySourceCode")
-    public List<StatBin> findStatBinBySourceCode(@RequestParam("periodKindListId") Long periodKindListId,
-                                            @RequestParam("inCatalog") Boolean inCatalog,
-                                            @RequestParam("active") Boolean active,
+    public Long findStatBinBySourceCode(@RequestParam("periodKindListId") Long periodKindListId,
                                             @RequestParam("sourceCode") String sourceCode,
                                             @RequestParam("teCode") String teCode,
                                             @RequestParam("statusCode") List<String> statusCode){
-        return appService.findBySourceCode(periodKindListId, inCatalog, active, sourceCode, teCode, statusCode);
+        return appService.findBySourceCode(periodKindListId, sourceCode, teCode, statusCode);
     }
 
     @GetMapping("/region")
@@ -126,14 +126,19 @@ public class Controller {
         return klazzService.getRegionList();
     }
 
-    @GetMapping("/countBySourceCode")
-    public Mono<Long> getCountStatBinBySourceCode(@RequestParam("periodKindListId") Long periodKindListId,
-                                                  @RequestParam("inCatalog") Boolean inCatalog,
-                                                  @RequestParam("sourceCode") String sourceCode,
-                                                  @RequestParam("teCode") String teCode,
-                                                  @RequestParam("statusCode") List<String> statusCode){
-        return appService.getCountStatBinBySourceCode(periodKindListId, inCatalog, sourceCode, teCode, statusCode);
+    @GetMapping("/krp")
+    public List<Krp> getKrpList(){
+        return klazzService.getKrpList();
     }
+
+//    @GetMapping("/countBySourceCode")
+//    public Mono<Long> getCountStatBinBySourceCode(@RequestParam("periodKindListId") Long periodKindListId,
+//                                                  @RequestParam("inCatalog") Boolean inCatalog,
+//                                                  @RequestParam("sourceCode") String sourceCode,
+//                                                  @RequestParam("teCode") String teCode,
+//                                                  @RequestParam("statusCode") List<String> statusCode){
+//        return appService.getCountStatBinBySourceCode(periodKindListId, inCatalog, sourceCode, teCode, statusCode);
+//    }
 
     @GetMapping("/getOur")
     public List<EcpDTO> getEcpList(@RequestParam("periodKindListId") Long periodKindListId){

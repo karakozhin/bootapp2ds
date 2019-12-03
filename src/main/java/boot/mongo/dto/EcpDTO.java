@@ -7,6 +7,7 @@ public class EcpDTO {
     private Long kolECP;
     private String procent;
 
+
     public EcpDTO() {
     }
 
@@ -41,4 +42,5 @@ public class EcpDTO {
     public void setCntCatalog(Long cntCatalog) {
         this.cntCatalog = cntCatalog;
     }
+
 }

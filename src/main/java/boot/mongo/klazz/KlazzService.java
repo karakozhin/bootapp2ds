@@ -39,4 +39,22 @@ public class KlazzService {
 
         return regionList;
     }
+
+    public List<Krp> getKrpList(){
+        KlazzServiceResponse<Kato> katoKlazzServiceResponse = klazzServiceClient.getKrpList();
+
+        List<Krp> krpList = new LinkedList<>();
+
+        if (katoKlazzServiceResponse.isSuccess()){
+            katoKlazzServiceResponse.getList().forEach(kato -> {
+                Krp krp = new Krp();
+//                krp.setId(kato.getItemId());
+                krp.setName(kato.getName());
+//                krp.setCode(kato.getCode());
+
+                krpList.add(krp);
+            });
+        }
+        return krpList;
+    }
 }
