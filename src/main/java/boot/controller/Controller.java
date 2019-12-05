@@ -6,6 +6,8 @@ import boot.mongo.klazz.KlazzService;
 import boot.mongo.klazz.Krp;
 import boot.mongo.klazz.Region;
 import boot.mongo.model.StatBin;
+import boot.mongo.sbr.RespondentInfo;
+import boot.mongo.sbr.SbrService;
 import boot.service.AppService;
 import boot.service.Export;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -30,6 +32,9 @@ public class Controller {
 
     @Autowired
     private Export export;
+
+    @Autowired
+    private SbrService sbrService;
 
     //kolichestva catalog
     @GetMapping("/cntCatalog")
@@ -118,7 +123,7 @@ public class Controller {
                                             @RequestParam("sourceCode") String sourceCode,
                                             @RequestParam("teCode") String teCode,
                                             @RequestParam("statusCode") List<String> statusCode){
-        return appService.findBySourceCode(periodKindListId, sourceCode, teCode, statusCode);
+        return appService.findBySourceCodeCnt(periodKindListId, sourceCode, teCode, statusCode);
     }
 
     @GetMapping("/region")
@@ -143,5 +148,17 @@ public class Controller {
     @GetMapping("/getOur")
     public List<EcpDTO> getEcpList(@RequestParam("periodKindListId") Long periodKindListId){
         return appService.getOur(periodKindListId);
+    }
+
+    @GetMapping("/getInfo")
+    public RespondentInfo getInfo(@RequestParam("bin") String bin){
+        return sbrService.getInfo(bin);
+    }
+
+    //odin region sdavwie po ECP
+
+    @GetMapping("/getOneRegion")
+    public EcpDTO getOneRegion(@RequestParam("periodKindListId") Long periodKindListId){
+        return appService.getOneRegionInfo(periodKindListId);
     }
 }

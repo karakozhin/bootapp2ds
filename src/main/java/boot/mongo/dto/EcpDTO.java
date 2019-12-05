@@ -6,6 +6,9 @@ public class EcpDTO {
     private Long cntCatalog;
     private Long kolECP;
     private String procent;
+    private Long malye;
+    private Long srednie;
+    private Long krupnye;
 
 
     public EcpDTO() {
@@ -43,4 +46,27 @@ public class EcpDTO {
         this.cntCatalog = cntCatalog;
     }
 
+    public Long getMalye() {
+        return malye;
+    }
+
+    public void setMalye(Long malye) {
+        this.malye = malye;
+    }
+
+    public Long getSrednie() {
+        return srednie;
+    }
+
+    public void setSrednie(Long srednie) {
+        this.srednie = srednie;
+    }
+
+    public Long getKrupnye() {
+        return krupnye;
+    }
+
+    public void setKrupnye(Long krupnye) {
+        this.krupnye = krupnye;
+    }
 }

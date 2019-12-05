@@ -10,19 +10,18 @@ import boot.mongo.model.MdicPeriodKindList;
 import boot.mongo.model.StatBin;
 import boot.mongo.repository.StatBinReactiveRepository;
 import boot.mongo.repository.StatBinRepository;
+import boot.mongo.sbr.SbrService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
@@ -46,6 +45,9 @@ public class AppService {
 
     @Autowired
     private KlazzServiceClient klazzServiceClient;
+
+    @Autowired
+    private SbrService sbrService;
 
     //kolichestva catalog po forme
     public List<StatBin> inCatalogByForm(Long periodKindListId, Long formId, Boolean active, Boolean inCatalog, String teCode) {
@@ -74,9 +76,13 @@ public class AppService {
 
 
     //sdavwie po ECP
-    public Long findBySourceCode(Long periodKindListId, String sourceCode, String teCode, List<String> statusCode){
+    public Long findBySourceCodeCnt(Long periodKindListId, String sourceCode, String teCode, List<String> statusCode){
          long g = statBinRepository.findByPeriodKindListIdAndInCatalogAndActiveAndSourceCodeAndTeCodeStartsWithAndStatusCodeIsIn(periodKindListId, true, true, sourceCode, teCode, statusCode).size();
         return g;
+    }
+
+    public List<StatBin> findBySourceCode(Long periodKindListId, String sourceCode, String teCode, List<String> statusCode){
+        return statBinRepository.findByPeriodKindListIdAndInCatalogAndActiveAndSourceCodeAndTeCodeStartsWithAndStatusCodeIsIn(periodKindListId, true, true, sourceCode, teCode, statusCode);
     }
 
     //kolichestvo sdavwih po ECP
@@ -88,6 +94,10 @@ public class AppService {
     public List<StatBin> getCountInCatalog(Long periodKindListId, String teCode){
         return statBinRepository.findByPeriodKindListIdAndActiveAndInCatalogAndTeCodeStartsWith(periodKindListId, true, true, teCode);
     }
+
+//    public List<RespondentInfo> getInfo(String bin){
+//        return sbrService.getRespondentInfoList(bin);
+//    }
 
     //forms
     public List<StatBin> allForm(Boolean active, List<Long> periodKindListId, String teCode) {
@@ -104,6 +114,58 @@ public class AppService {
         return report;
     }
 
+        //odin region sdavwie po ECP
+    public EcpDTO getOneRegionInfo(Long periodKindListId){
+
+        List<String> status = new ArrayList<>();
+        status.add("REPORTED");
+        status.add("RECOUNTED");
+
+        EcpDTO ecpDTO = new EcpDTO();
+
+        long passEcp = findBySourceCodeCnt(periodKindListId, "RESPONDENT", "55", status);
+        List<StatBin> statBins = findBySourceCode(periodKindListId, "RESPONDENT", "55", status);
+
+        long cntCatalog = getCountInCatalog(periodKindListId, "55").size();
+        long procent = (statBins.size() * 100)/cntCatalog;
+
+        String procent1 = "%";
+
+        AtomicLong malyeCount = new AtomicLong();
+        AtomicLong srednieCount = new AtomicLong();
+        AtomicLong krupnyeCount = new AtomicLong();
+
+
+        statBins.parallelStream().forEach(statBin -> {
+            String bin = statBin.getBin();
+            Long krp = Long.parseLong(sbrService.getInfo(bin).getKrp());
+
+
+            if(krp>=0 & krp<=100){
+                malyeCount.incrementAndGet();
+            }
+            else if (krp>=101 & krp<=250){
+                srednieCount.incrementAndGet();
+            }
+            else {
+                krupnyeCount.incrementAndGet();
+            }
+        });
+
+
+
+        ecpDTO.setOblName("Pavlodar");
+        ecpDTO.setCntCatalog(cntCatalog);
+        ecpDTO.setKolECP(passEcp);
+        ecpDTO.setProcent(procent+ procent1);
+        ecpDTO.setMalye(malyeCount.get());
+        ecpDTO.setSrednie(srednieCount.get());
+        ecpDTO.setKrupnye(krupnyeCount.get());
+
+        return ecpDTO;
+
+    }
+
     //вытаскивает отчеты которые сдали по ЕЦП по областям согласно КРП(Классификатор размерности предприятий) и в процентах
     public List<EcpDTO> getOur(Long periodKindListId){
 
@@ -115,13 +177,11 @@ public class AppService {
         List<Region> regionList = klazzService.getRegionList();
         List<Krp> krpList = klazzService.getKrpList();
 
-//        String mal = krpList.get(0).getName();
-//        String sred = krpList.get(1).getName();
-//        String krup = krpList.get(2).getName();
-
         String proc = "%";
 
-        for (Region region  : regionList){
+
+      regionList.parallelStream().forEach(region ->
+          {
 
             EcpDTO ecpDTO = new EcpDTO();
 
@@ -129,20 +189,48 @@ public class AppService {
             String code = region.getTeCode();
 
             //передал teCode
-            long passEcp = findBySourceCode(periodKindListId, "RESPONDENT", code, status);
+            //sdavwie po ECP
+            long passEcp = findBySourceCodeCnt(periodKindListId, "RESPONDENT", code, status);
+            List<StatBin> statBins = findBySourceCode(periodKindListId, "RESPONDENT", code, status);
 
+
+            //kolichestvo po katalogu
             long cntCatalog = getCountInCatalog(periodKindListId, code).size();
-            long procent = (passEcp * 100)/cntCatalog;
+            long procent = (statBins.size() * 100)/cntCatalog;
 
+
+              AtomicLong malyeCount = new AtomicLong();
+              AtomicLong srednieCount = new AtomicLong();
+              AtomicLong krupnyeCount = new AtomicLong();
+
+              statBins.parallelStream().forEach(statBin -> {
+
+                  String bin = statBin.getBin();
+                  Long krp = Long.parseLong(sbrService.getInfo(bin).getKrp());
+
+                  if(krp>=0 & krp<=100){
+                      malyeCount.incrementAndGet();
+                  }
+                  else if (krp>=101 & krp<=250){
+                      srednieCount.incrementAndGet();
+                  }
+                  else {
+                      krupnyeCount.incrementAndGet();
+                  }
+              });
 
 
             ecpDTO.setOblName(region.getName());
             ecpDTO.setKolECP(passEcp);
             ecpDTO.setCntCatalog(cntCatalog);
             ecpDTO.setProcent(procent + proc);
+              ecpDTO.setMalye(malyeCount.get());
+              ecpDTO.setSrednie(srednieCount.get());
+              ecpDTO.setKrupnye(krupnyeCount.get());
             ecpDTOList.add(ecpDTO);
 
-        }
+        });
+
 
         return ecpDTOList;
     }

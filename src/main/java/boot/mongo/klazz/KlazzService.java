@@ -48,9 +48,7 @@ public class KlazzService {
         if (katoKlazzServiceResponse.isSuccess()){
             katoKlazzServiceResponse.getList().forEach(kato -> {
                 Krp krp = new Krp();
-//                krp.setId(kato.getItemId());
                 krp.setName(kato.getName());
-//                krp.setCode(kato.getCode());
 
                 krpList.add(krp);
             });
